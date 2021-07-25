@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/Stezok/excel-repot-service/internal/excel"
 	"github.com/Stezok/excel-repot-service/internal/handler/report"
 	"github.com/Stezok/excel-repot-service/internal/presenter/html"
@@ -16,17 +18,19 @@ func main() {
 	})
 
 	repo := repository.Repository{
-		ReportRepository: dbredis.NewRedisRepository(client),
+		UpdateTimeRepository: dbredis.NewRedisUpdateTimeRepository(client),
+		ReportRepository:     dbredis.NewRedisReportRepository(client),
 	}
 
 	scrapper := excel.NewScrapper("plan.xlsx", "review.xlsx")
 
 	service := &service.Service{
-		ReportService: service.NewCashedReportService(repo, scrapper),
+		UpdateTimeService: service.NewCashedUpdateTimeService(repo),
+		ReportService:     service.NewCashedReportService(repo, scrapper),
 	}
 
 	presenter := html.NewHTMLPresenter()
-	handler := report.NewReportHandler(service, presenter)
+	handler := report.NewReportHandler(log.Default(), service, presenter)
 
 	router := handler.InitRoutes()
 	router.Run()

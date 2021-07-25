@@ -41,14 +41,14 @@ func (scr *Scrapper) scrapePlan(reports map[string]models.Report) error {
 	columnAnchors[duidTag] = -1
 	columnAnchors[sqcCheckTag] = -1
 
-	lastRow := cells[0][len(cells[0])-1]
-	for i := 0; i < len(lastRow); i++ {
-		if val, ok := columnAnchors[lastRow[i]]; ok && val == -1 {
-			columnAnchors[lastRow[i]] = i
+	firstRow := cells[0][0]
+	for i := 0; i < len(firstRow); i++ {
+		if val, ok := columnAnchors[firstRow[i]]; ok && val == -1 {
+			columnAnchors[firstRow[i]] = i
 		}
 	}
 
-	for i := 0; i < len(cells[0])-1; i++ {
+	for i := 1; i < len(cells[0]); i++ {
 		row := cells[0][i]
 		duid := row[columnAnchors[duidTag]]
 		if _, ok := reports[duid]; ok {

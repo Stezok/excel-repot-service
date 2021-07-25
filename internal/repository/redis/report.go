@@ -8,16 +8,16 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-type RedisRepository struct {
+type RedisReportRepository struct {
 	client *redis.Client
 }
 
-func (repo *RedisRepository) GetReportsKeys() ([]string, error) {
+func (repo *RedisReportRepository) GetReportsKeys() ([]string, error) {
 	ctx := context.Background()
 	return repo.client.HKeys(ctx, "report:main").Result()
 }
 
-func (repo *RedisRepository) GetReport(key string) (report models.Report, err error) {
+func (repo *RedisReportRepository) GetReport(key string) (report models.Report, err error) {
 	ctx := context.Background()
 
 	var jsonReport string
@@ -30,7 +30,7 @@ func (repo *RedisRepository) GetReport(key string) (report models.Report, err er
 	return
 }
 
-func (repo *RedisRepository) SetReport(report models.Report) error {
+func (repo *RedisReportRepository) SetReport(report models.Report) error {
 	byteJsonReport, err := json.Marshal(report)
 	if err != nil {
 		return err
@@ -40,13 +40,13 @@ func (repo *RedisRepository) SetReport(report models.Report) error {
 	return repo.client.HSetNX(ctx, "report:main", report.DUID, byteJsonReport).Err()
 }
 
-func (repo *RedisRepository) DeleteReports() error {
+func (repo *RedisReportRepository) DeleteReports() error {
 	ctx := context.Background()
 	return repo.client.Del(ctx, "report:main").Err()
 }
 
-func NewRedisRepository(client *redis.Client) *RedisRepository {
-	return &RedisRepository{
+func NewRedisReportRepository(client *redis.Client) *RedisReportRepository {
+	return &RedisReportRepository{
 		client: client,
 	}
 }

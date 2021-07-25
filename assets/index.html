@@ -1,0 +1,216 @@
+<style>
+    .styled-table {
+        /* margin: 25px 0; */
+        margin: auto auto;
+        border-collapse: collapse;
+        font-size: 0.9em;
+        font-family: sans-serif;
+        min-width: 400px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .styled-table thead tr {
+        background-color: #009879;
+        color: #ffffff;
+        text-align: left;
+    }
+
+    .styled-table th,
+    .styled-table td {
+        padding: 12px 15px;
+    }
+
+    .styled-table tbody tr {
+        border-bottom: 1px solid #dddddd;
+    }
+    
+    .styled-table tbody tr:nth-of-type(even) {
+        background-color: #f3f3f3;
+    }
+    
+    .styled-table tbody tr:last-of-type {
+        border-bottom: 2px solid #009879;
+    }
+
+    .styled-table tbody tr.active-row {
+        font-weight: bold;
+        color: #009879;
+    }
+</style>
+
+<style>
+    .arrow {
+        border: solid black;
+        border-width: 0 3px 3px 0;
+        display: inline-block;
+        padding: 3px;
+        margin-left: 8px;
+    }
+
+    .down {
+        vertical-align: baseline;
+        transform: rotate(45deg);
+        -webkit-transform: rotate(45deg);
+    }
+
+    .up {
+        vertical-align: baseline;
+        transform: rotate(-135deg);
+        -webkit-transform: rotate(-135deg);
+    }
+</style>
+
+<script>
+    function sortByUncheckedDown(a, b) {
+        return (a.unchecked < b.unchecked) ? 1 : -1
+    }
+    
+    function sortByUncheckedUp(a, b) {
+        return (a.unchecked > b.unchecked) ? 1 : -1
+    }
+    
+    function sortByTemplateNameDown(a, b) {
+        return (a.template_name < b.template_name) ? 1 : -1
+    }
+
+    function sortByTemplateNameUp(a, b) {
+        return (a.template_name > b.template_name) ? 1 : -1
+    }
+
+    function sortByOwnerDown(a, b) {
+        return (a.sqc_check < b.sqc_check) ? 1 : -1
+    }
+    
+    function sortByOwnerUp(a, b) {
+        return (a.sqc_check > b.sqc_check) ? 1 : -1
+    }
+</script>
+
+<script>
+
+    let arrow = document.createElement("i")
+    arrow.id = "arrow"
+    arrow.classList.add("arrow", "down")
+    
+    let prevSorted = '';
+    let records;
+
+    function buildRow(record) {
+        unchecked = record.unchecked
+        if(unchecked == 0) unchecked = "1+"
+        row = `
+            <tr>
+                <td>${record.du_id}</td>
+                <td>${record.sqc_check}</td>
+                <td>${record.status}</td>
+                <td>${record.template_name}</td>
+                <td>${unchecked}</td>
+            </tr>
+        `
+        return row
+    }
+
+    function present() {
+        table = ``
+        for(i = 0;i < records.length;i++) {
+            table += buildRow(records[i])
+        }
+        document.getElementById("tbody").innerHTML = table
+    }
+
+    async function init() {
+        let response = await fetch("data");
+
+        if(response.status == 200) {
+            records = await response.json()
+        } else {
+            console.log("error while /data")
+            console.log(response)
+        }
+        
+        console.log(records)
+        present()
+
+        response = await fetch("lastUpdateTime")
+
+        if(response.status == 200) {
+            time = await response.json()
+            date = new Date(time.last_update_time * 1000)
+            document.getElementById("last_update_time").innerText = date
+        } else {
+            console.log("error while /lastUpdateTime")
+            console.log(response)
+        }
+    }
+
+
+    function toggle(id) {
+        let arr = document.getElementById("arrow")
+        if(prevSorted == id) {
+            if(arr.classList.contains("up")) {
+                arr.classList.replace("up", "down");
+            } else {
+                arr.classList.replace("down", "up");
+            }
+        } else {
+            if(arr != null) arr.remove();
+            arrow.classList.replace("up", "down")
+            document.getElementById(id).insertAdjacentElement("beforeend", arrow);
+            prevSorted = id;
+        }
+        
+        condition = id + "_"
+        if(document.getElementById("arrow").classList.contains("down")) condition += "down"
+        else condition += "up"
+        sortRecordsBy(condition)
+        present()
+    }
+
+    function sortRecordsBy(cond) {
+        let compare;
+        console.log(cond)
+        switch(cond) {
+            case "unchecked_down":
+                compare = sortByUncheckedDown;
+                break;
+            case "unchecked_up":
+                compare = sortByUncheckedUp;
+                break;    
+            case "template_name_down":
+                compare = sortByTemplateNameDown;
+                break;
+            case "template_name_up":
+                compare = sortByTemplateNameUp;
+                break;
+            case "owner_down":
+                compare = sortByOwnerDown;
+                break;
+            case "owner_up":
+                compare = sortByOwnerUp;
+                break;
+        }
+        
+        records.sort(compare);
+    }
+
+</script>
+
+<body onload="init()">
+    <div>
+        Last update time: <div id="last_update_time"></div>
+    </div>
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>DU ID</th>
+                <th onclick="toggle(this.id)" id="owner">SQC Check</th>
+                <th>Status</th>
+                <th onclick="toggle(this.id)" id="template_name">Template Name</th>
+                <th onclick="toggle(this.id)" id="unchecked">Unchecked</th>
+            </tr>
+        </thead>
+        <tbody id="tbody">
+            
+        </tbody>
+    </table>    
+</body>

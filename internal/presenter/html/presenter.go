@@ -59,9 +59,6 @@ func (pres *HTMLPresenter) Present(reports []models.Report) string {
 				<th>SQC Check</th>
 				<th>Status</th>
 				<th>Template Name</th>
-				<th>Collected</th>
-				<th>Passed</th>
-				<th>Failed</th>
 				<th>Unchecked</th>
 			</tr>
 		</thead>
@@ -78,9 +75,6 @@ func (pres *HTMLPresenter) Present(reports []models.Report) string {
 			<td>%s</td>
 			<td>%s</td>
 			<td>%s</td>
-			<td>%d</td>
-			<td>%d</td>
-			<td>%d</td>
 			<td>%s</td>
 		</tr>
 	`
@@ -88,7 +82,7 @@ func (pres *HTMLPresenter) Present(reports []models.Report) string {
 	for _, report := range reports {
 		var unchecked string
 		if report.Passed+report.Failed == report.Collected {
-			unchecked = "+1"
+			unchecked = "1+"
 		} else {
 			unchecked = strconv.Itoa(report.Collected - report.Failed - report.Passed)
 		}
@@ -98,9 +92,6 @@ func (pres *HTMLPresenter) Present(reports []models.Report) string {
 			report.SQCCheck,
 			report.Status,
 			report.TemplateName,
-			report.Collected,
-			report.Passed,
-			report.Failed,
 			unchecked,
 		)
 	}
