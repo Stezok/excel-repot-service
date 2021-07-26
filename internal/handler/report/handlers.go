@@ -7,6 +7,47 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func (h *ReportHandler) HandleLoginPage(ctx *gin.Context) {
+	if ctx.GetBool("registered") {
+		ctx.HTML(http.StatusOK, "registered.html", nil)
+		return
+	}
+
+	ctx.HTML(http.StatusOK, "login.html", nil)
+}
+
+func (h *ReportHandler) HandleLogin(ctx *gin.Context) {
+	var loginForm LoginForm
+	err := ctx.Bind(&loginForm)
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusBadRequest)
+		h.logger.Print(err)
+		return
+	}
+
+	ok, err := h.service.Login(loginForm.Password)
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		h.logger.Print(err)
+		return
+	}
+
+	if !ok {
+		ctx.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	token, err := CreateToken()
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		h.logger.Print(err)
+		return
+	}
+
+	ctx.SetCookie("auth_token", token, 60*60*24, "/", "localhost", false, true)
+	ctx.Redirect(http.StatusMovedPermanently, "/report/")
+}
+
 func (h *ReportHandler) HandlerIndex(ctx *gin.Context) {
 	ctx.HTML(http.StatusOK, "index.html", nil)
 }
@@ -28,15 +69,7 @@ func (h *ReportHandler) HandlerData(ctx *gin.Context) {
 }
 
 func (h *ReportHandler) HandleUpdate(ctx *gin.Context) {
-	reports, err := h.service.UpdateReports()
-	if err != nil {
-		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
-		return
-	}
-
-	htmlTable := h.presenter.Present(reports)
-	_, err = ctx.Writer.Write([]byte(htmlTable))
+	_, err := h.service.UpdateReports()
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.logger.Print(err)
@@ -44,6 +77,7 @@ func (h *ReportHandler) HandleUpdate(ctx *gin.Context) {
 	}
 
 	h.service.SetLastUpdateTime(time.Now().Unix())
+	ctx.Redirect(http.StatusMovedPermanently, "")
 }
 
 func (h *ReportHandler) HandlerLastUpdateTime(ctx *gin.Context) {

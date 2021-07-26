@@ -2,6 +2,10 @@ package service
 
 import "github.com/Stezok/excel-repot-service/internal/models"
 
+type AuthService interface {
+	Login(string) (bool, error)
+}
+
 type UpdateTimeService interface {
 	GetLastUpdateTime() (int64, error)
 	SetLastUpdateTime(int64) error
@@ -13,6 +17,7 @@ type ReportService interface {
 }
 
 type Service struct {
+	AuthService
 	UpdateTimeService
 	ReportService
 }

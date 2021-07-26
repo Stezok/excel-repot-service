@@ -2,6 +2,10 @@ package repository
 
 import "github.com/Stezok/excel-repot-service/internal/models"
 
+type AuthRepository interface {
+	Login(string) (bool, error)
+}
+
 type UpdateTimeRepository interface {
 	GetLastUpdateTime() (int64, error)
 	SetLastUpdateTime(int64) error
@@ -15,6 +19,7 @@ type ReportRepository interface {
 }
 
 type Repository struct {
+	AuthRepository
 	UpdateTimeRepository
 	ReportRepository
 }
