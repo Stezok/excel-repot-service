@@ -1,7 +1,9 @@
 package report
 
 import (
+	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -68,16 +70,124 @@ func (h *ReportHandler) HandlerData(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, adaptedReports)
 }
 
-func (h *ReportHandler) HandleUpdate(ctx *gin.Context) {
-	_, err := h.service.UpdateReports()
+func (h *ReportHandler) HandleUpdatePage(ctx *gin.Context) {
+	ctx.HTML(http.StatusOK, "update.html", nil)
+}
+
+func (h *ReportHandler) HandleUpdatePlan(ctx *gin.Context) {
+	uploadedFile, err := ctx.FormFile("plan")
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusBadRequest)
+		h.logger.Print(err)
+		return
+	}
+
+	filename := "temp_plan.xlsx"
+	if err = ctx.SaveUploadedFile(uploadedFile, filename); err != nil {
+		ctx.AbortWithStatus(http.StatusBadRequest)
+		h.logger.Print(err)
+		return
+	}
+
+	file, err := os.Open("temp_plan.xlsx")
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		h.logger.Print(err)
+		return
+	}
+	defer func() {
+		file.Close()
+		err = os.Remove("temp_plan.xlsx")
+		if err != nil {
+			h.logger.Print(err)
+		}
+	}()
+
+	planFile, err := os.OpenFile("plan.xlsx", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		h.logger.Print(err)
+		return
+	}
+	defer planFile.Close()
+
+	_, err = io.Copy(planFile, file)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.logger.Print(err)
 		return
 	}
 
-	h.service.SetLastUpdateTime(time.Now().Unix())
-	ctx.Redirect(http.StatusMovedPermanently, "")
+	_, err = h.service.UpdateReports()
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		h.logger.Print(err)
+		return
+	}
+	err = h.service.SetLastUpdateTime(time.Now().Unix())
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		h.logger.Print(err)
+		return
+	}
+}
+
+func (h *ReportHandler) HandleUpdateReview(ctx *gin.Context) {
+	uploadedFile, err := ctx.FormFile("review")
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusBadRequest)
+		h.logger.Print(err)
+		return
+	}
+
+	filename := "temp_review.xlsx"
+	if err = ctx.SaveUploadedFile(uploadedFile, filename); err != nil {
+		ctx.AbortWithStatus(http.StatusBadRequest)
+		h.logger.Print(err)
+		return
+	}
+
+	file, err := os.Open("temp_review.xlsx")
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		h.logger.Print(err)
+		return
+	}
+	defer func() {
+		file.Close()
+		err = os.Remove("temp_review.xlsx")
+		if err != nil {
+			h.logger.Print(err)
+		}
+	}()
+
+	reviewFile, err := os.OpenFile("review.xlsx", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		h.logger.Print(err)
+		return
+	}
+	defer reviewFile.Close()
+
+	_, err = io.Copy(reviewFile, file)
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		h.logger.Print(err)
+		return
+	}
+
+	_, err = h.service.UpdateReports()
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		h.logger.Print(err)
+		return
+	}
+	err = h.service.SetLastUpdateTime(time.Now().Unix())
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		h.logger.Print(err)
+		return
+	}
 }
 
 func (h *ReportHandler) HandlerLastUpdateTime(ctx *gin.Context) {

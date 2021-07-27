@@ -48,7 +48,9 @@ func (h *ReportHandler) InitRoutes() *gin.Engine {
 	{
 		auth.GET("/", h.HandlerIndex)
 		auth.GET("/data", h.HandlerData)
-		auth.GET("/update", h.HandleUpdate)
+		auth.GET("/update", h.HandleUpdatePage)
+		auth.POST("/update/plan", h.HandleUpdatePlan)
+		auth.POST("/update/review", h.HandleUpdateReview)
 		auth.GET("/lastUpdateTime", h.HandlerLastUpdateTime)
 	}
 
