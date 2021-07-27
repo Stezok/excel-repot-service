@@ -85,6 +85,9 @@
     let planFile;
     let reviewFile;
 
+    let planBuff = "Upload Plan"
+    let reviewBuff = "Upload Review"
+
     async function uploadFiles() {
         if(planFile.files.length != 0) {
             formData = new FormData()
@@ -109,16 +112,85 @@
 
 
     function init() {
+        planArea = document.getElementById("plan-area")
         planFile = document.getElementById("plan-file")
-        planFile.addEventListener('change', function() {
-            document.getElementById("plan-text").innerHTML = planFile.files.item(0).name
-            document.getElementById("plan-area").classList.add("accepted")
+        planText = document.getElementById("plan-text")
+        reviewArea = document.getElementById("review-area")
+        reviewFile = document.getElementById("review-file")
+        reviewText = document.getElementById("review-text")
+        
+        planArea.addEventListener('dragenter', function(event) {
+            event.preventDefault()
+            event.stopPropagation()
+
+           planText.innerHTML = "Drop!"
+        })
+        
+        planArea.addEventListener('dragover', function(event) {
+            event.preventDefault()
+            event.stopPropagation()
+
+            planText.innerHTML = "Drop!"
+        })
+        
+        planArea.addEventListener('dragleave', function(event) {
+            event.preventDefault()
+            event.stopPropagation()
+
+            planText.innerHTML = planBuff 
         })
 
-        reviewFile = document.getElementById("review-file")
+        planArea.addEventListener('drop', function(event) {
+            event.preventDefault()
+            event.stopPropagation()
+
+            planFile.files = event.dataTransfer.files
+            planText.innerHTML = planFile.files.item(0).name
+            planBuff = planFile.files.item(0).name
+            planArea.classList.add("accepted")
+        })
+        
+        planFile.addEventListener('change', function() {
+            document.getElementById("plan-text").innerHTML = planFile.files.item(0).name
+            planBuff = planFile.files.item(0).name
+            planArea.classList.add("accepted")
+        })
+        
+        reviewArea.addEventListener('dragenter', function(event) {
+            event.preventDefault()
+            event.stopPropagation()
+
+            reviewText.innerHTML = "Drop!"
+        })
+
+        reviewArea.addEventListener('dragover', function(event) {
+            event.preventDefault()
+            event.stopPropagation()
+
+            reviewText.innerHTML = "Drop!"
+        })
+
+        reviewArea.addEventListener('dragleave', function(event) {
+            event.preventDefault()
+            event.stopPropagation()
+
+            reviewText.innerHTML = reviewBuff
+        })
+
+        reviewArea.addEventListener('drop', function(event) {
+            event.preventDefault()
+            event.stopPropagation()
+
+            reviewFile.files = event.dataTransfer.files
+            reviewText.innerHTML = reviewFile.files.item(0).name
+            reviewBuff = reviewFile.files.item(0).name
+            reviewArea.classList.add("accepted")
+        })
+
         reviewFile.addEventListener('change', function() {
-            document.getElementById("review-text").innerHTML = reviewFile.files.item(0).name
-            document.getElementById("review-area").classList.add("accepted")
+            reviewText.innerHTML = reviewFile.files.item(0).name
+            reviewBuff = reviewFile.files.item(0).name
+            reviewArea.classList.add("accepted")
         })
     }
 
@@ -129,7 +201,7 @@
         <div class="drop-area child" id="plan-area">
             <div class="form">
                 <input type="file" accept=".xlsx" style="display: none;" id="plan-file">
-                <label for="plan-file"><span class="login100-form-title" id="plan-text">Upload Report</span></label>
+                <label for="plan-file"><span class="login100-form-title" id="plan-text">Upload Plan</span></label>
             </div>
         </div>
         <div class="drop-area child" id="review-area">
