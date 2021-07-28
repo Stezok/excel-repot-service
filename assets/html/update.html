@@ -92,7 +92,7 @@
         if(planFile.files.length != 0) {
             formData = new FormData()
             formData.append('plan', planFile.files.item(0))
-            await fetch("/report/update/plan", {
+            await fetch("update/plan", {
                 method: "POST",
                 body: formData
             })
@@ -101,13 +101,13 @@
         if(reviewFile.files.length != 0) {
             formData = new FormData()
             formData.append('review', reviewFile.files.item(0))
-            await fetch("/report/update/review", {
+            await fetch("update/review", {
                 method: "POST",
                 body: formData
             })
         }
 
-        window.location.replace("/report/")
+        window.location.replace("/")
     }
 
 
@@ -196,7 +196,7 @@
 
 </script>
 
-<body onload="init()" style="background-color: #9ee9c1;">
+<body onload="init()">
     <div class="container">    
         <div class="drop-area child" id="plan-area">
             <div class="form">
