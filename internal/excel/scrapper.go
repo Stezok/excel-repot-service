@@ -51,10 +51,28 @@ func (scr *Scrapper) scrapePlan(reports map[string]models.Report) error {
 	for i := 1; i < len(cells[0]); i++ {
 		row := cells[0][i]
 		duid := row[columnAnchors[duidTag]]
+		if duid == "" {
+			continue
+		}
+
 		if _, ok := reports[duid]; ok {
 			temp := reports[duid]
-			temp.SQCCheck = row[columnAnchors[sqcCheckTag]]
-			reports[duid] = temp
+
+			if temp.SQCCheck != "no owner" {
+				if _, ok := reports["second::"+duid]; !ok {
+					temp.Index = "second::" + temp.Index
+					temp.SQCCheck = row[columnAnchors[sqcCheckTag]]
+					reports[temp.Index] = temp
+					continue
+				} else {
+					temp = reports["second::"+duid]
+					temp.SQCCheck = row[columnAnchors[sqcCheckTag]]
+					reports["second::"+duid] = temp
+				}
+			} else {
+				temp.SQCCheck = row[columnAnchors[sqcCheckTag]]
+				reports[duid] = temp
+			}
 		}
 	}
 
@@ -101,6 +119,9 @@ func (scr *Scrapper) scrapeReview(reports map[string]models.Report) error {
 	for i := 1; i < len(cells[0]); i++ {
 		row := cells[0][i]
 		duid := row[columnAnchors[duidTag]]
+		if duid == "" {
+			continue
+		}
 
 		collected, err := strconv.Atoi(row[columnAnchors[collectedTag]])
 		if err != nil {
@@ -115,7 +136,13 @@ func (scr *Scrapper) scrapeReview(reports map[string]models.Report) error {
 			continue
 		}
 
+		index := duid
+		if _, ok := reports[index]; ok {
+			index = "second:" + duid
+		}
+
 		temp := models.Report{
+			Index:        index,
 			DUID:         duid,
 			SQCCheck:     "no owner",
 			Status:       row[columnAnchors[statusTag]],
@@ -125,7 +152,7 @@ func (scr *Scrapper) scrapeReview(reports map[string]models.Report) error {
 			TemplateName: row[columnAnchors[templateTag]],
 		}
 
-		reports[duid] = temp
+		reports[index] = temp
 	}
 	return nil
 }

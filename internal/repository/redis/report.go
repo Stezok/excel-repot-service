@@ -37,7 +37,7 @@ func (repo *RedisReportRepository) SetReport(report models.Report) error {
 	}
 
 	ctx := context.Background()
-	return repo.client.HSetNX(ctx, "report:main", report.DUID, byteJsonReport).Err()
+	return repo.client.HSetNX(ctx, "report:main", report.Index, byteJsonReport).Err()
 }
 
 func (repo *RedisReportRepository) DeleteReports() error {

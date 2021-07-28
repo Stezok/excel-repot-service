@@ -1,7 +1,6 @@
 package report
 
 import (
-	"io"
 	"net/http"
 	"os"
 	"time"
@@ -89,29 +88,14 @@ func (h *ReportHandler) HandleUpdatePlan(ctx *gin.Context) {
 		return
 	}
 
-	file, err := os.Open("temp_plan.xlsx")
+	err = SafeCopyFile("plan.xlsx", "temp_plan.xlsx")
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.logger.Print(err)
 		return
 	}
-	defer func() {
-		file.Close()
-		err = os.Remove("temp_plan.xlsx")
-		if err != nil {
-			h.logger.Print(err)
-		}
-	}()
 
-	planFile, err := os.OpenFile("plan.xlsx", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-	if err != nil {
-		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
-		return
-	}
-	defer planFile.Close()
-
-	_, err = io.Copy(planFile, file)
+	err = os.Remove("temp_plan.xlsx")
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.logger.Print(err)
@@ -147,29 +131,14 @@ func (h *ReportHandler) HandleUpdateReview(ctx *gin.Context) {
 		return
 	}
 
-	file, err := os.Open("temp_review.xlsx")
+	err = SafeCopyFile("review.xlsx", "temp_review.xlsx")
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.logger.Print(err)
 		return
 	}
-	defer func() {
-		file.Close()
-		err = os.Remove("temp_review.xlsx")
-		if err != nil {
-			h.logger.Print(err)
-		}
-	}()
 
-	reviewFile, err := os.OpenFile("review.xlsx", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-	if err != nil {
-		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
-		return
-	}
-	defer reviewFile.Close()
-
-	_, err = io.Copy(reviewFile, file)
+	err = os.Remove("temp_review.xlsx")
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.logger.Print(err)
