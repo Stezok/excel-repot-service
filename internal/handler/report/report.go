@@ -44,7 +44,7 @@ func (h *ReportHandler) InitRoutes() *gin.Engine {
 	router.GET("/login", h.HandleLoginPage)
 	router.POST("/login", h.HandleLogin)
 
-	auth := router.Group("/report", h.MiddlewareAuthRequired())
+	auth := router.Group("/", h.MiddlewareAuthRequired())
 	{
 		auth.GET("/", h.HandlerIndex)
 		auth.GET("/data", h.HandlerData)

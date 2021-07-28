@@ -23,9 +23,23 @@
     .styled-table tbody tr {
         border-bottom: 1px solid #dddddd;
     }
+
     
+    .styled-table tbody tr:nth-of-type(even):hover {
+        background: rgba(0, 0, 0, 0.15);
+    }
+
     .styled-table tbody tr:nth-of-type(even) {
         background-color: #f3f3f3;
+    }
+
+
+    .styled-table tbody tr:nth-of-type(odd):hover {
+        background: rgba(0, 0, 0, 0.15);
+    }
+
+    .styled-table tbody tr:nth-of-type(odd) {
+        background-color: white;
     }
     
     .styled-table tbody tr:last-of-type {
@@ -36,6 +50,8 @@
         font-weight: bold;
         color: #009879;
     }
+
+
 </style>
 
 <style>
@@ -60,6 +76,101 @@
     }
 </style>
 
+<style>
+    .container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding-left: 20vw;
+        padding-right: 20vw;
+        gap: 20px;
+        margin-bottom: 2vh;
+    }
+
+    .filter-container {
+        flex: 1 0 100%;
+        
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .picked {
+        background-color: #9ee9c1 !important;
+    }
+    
+    .filter-node:hover {
+        background-color: rgba(0,106,84, 0.9);
+    }
+    
+    .filter-node {
+        flex: 1 0 18%;
+
+        display: table;
+        text-align: center;
+        
+        height: 4vh;
+
+        background-color: rgba(0,152,121, 0.9);
+        border-radius: 10px;
+        border: solid;
+    }
+
+    .filter-node span {
+        display: table-cell;
+        margin: 0 auto;
+        vertical-align: middle;
+    }
+
+    .drop-filter-node:hover {
+        background-color: #f6264d;
+    }
+
+    .drop-filter-node {
+        align-self: center;
+        
+        display: table;
+        text-align: center;
+
+        height: 5vh;
+        width: 6vw;
+        background-color: rgba(254,92,92, 1);
+        border-radius: 10px;
+        border: solid;
+    }
+
+    .drop-filter-node span {
+        display: table-cell;
+        margin: 0 auto;
+        vertical-align: middle;
+    }
+
+    #last-update-time {
+        flex: 1 0 100%;
+
+        display: flex;
+        justify-content: center;
+    }
+
+    .link {
+        flex-grow: 1;
+        display: flex;
+        justify-content: center;
+
+        background-color: rgba(0,152,121, 0.9);
+        border-radius: 10px;
+        border: solid;
+
+        margin: 5px;
+        padding: 5px;
+    }
+
+</style>    
+
+</style>
+
+<!-- COMPARATORS -->
 <script>
     function sortByUncheckedDown(a, b) {
         return (a.unchecked < b.unchecked) ? 1 : -1
@@ -86,6 +197,7 @@
     }
 </script>
 
+<!-- MAIN -->
 <script>
 
     let arrow = document.createElement("i")
@@ -94,16 +206,42 @@
     
     let prevSorted = '';
     let records;
+    let filtered;
+
+    function removeTemplate(template) {
+        kickRecordsByTemplate(template)
+        present()
+    }
+
+    function secToDur(seconds) {
+        
+        sec = seconds % 60
+        seconds = Math.floor(seconds / 60)
+
+        min = seconds % 60
+        seconds = Math.floor(seconds / 60)
+
+        h = seconds % 24
+        seconds = Math.floor(seconds / 24)
+
+        d = seconds
+
+        return `${d}d ${h}h ${min}m ${sec}s`
+    }
 
     function buildRow(record) {
         unchecked = record.unchecked
         if(unchecked == 0) unchecked = "1+"
+
+        duration = secToDur(record.save_time)
+
         row = `
             <tr>
                 <td>${record.du_id}</td>
                 <td>${record.sqc_check}</td>
                 <td>${record.status}</td>
-                <td>${record.template_name}</td>
+                <td onclick="removeTemplate(this.innerHTML)">${record.template_name}</td>
+                <td>${duration}</td>
                 <td>${unchecked}</td>
             </tr>
         `
@@ -112,8 +250,8 @@
 
     function present() {
         table = ``
-        for(i = 0;i < records.length;i++) {
-            table += buildRow(records[i])
+        for(i = 0;i < filtered.length;i++) {
+            table += buildRow(filtered[i])
         }
         document.getElementById("tbody").innerHTML = table
     }
@@ -123,6 +261,7 @@
 
         if(response.status == 200) {
             records = await response.json()
+            filtered = records
         } else {
             console.log("error while /data")
             console.log(response)
@@ -136,13 +275,12 @@
         if(response.status == 200) {
             time = await response.json()
             date = new Date(time.last_update_time * 1000)
-            document.getElementById("last_update_time").innerText = date
+            document.getElementById("time-text").innerText = date
         } else {
             console.log("error while /lastUpdateTime")
             console.log(response)
         }
     }
-
 
     function toggle(id) {
         let arr = document.getElementById("arrow")
@@ -190,15 +328,63 @@
                 break;
         }
         
-        records.sort(compare);
+        filtered.sort(compare);
+    }
+
+    function kickRecordsByTemplate(template) {
+        it = 0
+        for(i = 0;i < filtered.length;i++) {
+            if(filtered[i].template_name != template) {
+                filtered[it++] = filtered[i]
+            }
+        }
+        filtered = filtered.slice(0, it)
+    }
+
+    function pickTimeFilter(id, bottSeconds, topSeconds) {
+        console.log(bottSeconds)
+        filtered = []
+        for(i = 0;i < records.length;i++) {
+            if(records[i].save_time >= bottSeconds && (records[i].save_time < topSeconds || topSeconds == -1)) {
+                filtered.push(records[i])
+            }
+        }
+
+        prevPicked = document.getElementsByClassName("picked").item(0)
+        if(prevPicked != null) {
+            prevPicked.classList.remove("picked")
+        }
+
+        document.getElementById(id).classList.add("picked")
+
+        present()
+    }
+
+    function resetFilter() {
+        filtered = records
+        present()
     }
 
 </script>
 
-<body onload="init()">
-    <div>
-        Last update time: <div id="last_update_time"></div>
+<body onload="init()" style="background-color: #9ee9c1;">
+    <div class="container">
+        <div id="last-update-time"><strong>Last update time: <span id="time-text"></span></strong></div>
+        <div class="filter-container">
+            <div class="filter-node" id="f1" onclick="pickTimeFilter('f1', 30 * 60, 2 * 60 * 60)"><span> >30m </span></div>
+            <div class="filter-node" id="f2" onclick="pickTimeFilter('f2', 2 * 60 * 60, 12 * 60 * 60)"><span> >2h </span></div>
+            <div class="filter-node" id="f3" onclick="pickTimeFilter('f3', 12 * 60 * 60, 24 * 60 * 60)"><span> >12h </span></div>
+            <div class="filter-node" id="f4" onclick="pickTimeFilter('f4', 24 * 60 * 60, 2 * 24 * 60 * 60)"><span> >1d </span></div>
+            <div class="filter-node" id="f5" onclick="pickTimeFilter('f5', 2 * 24 * 60 * 60, -1)"><span> >2d </span></div>
+            <div class="drop-filter-node" onclick="resetFilter()"><span> Reset </span></div>
+        </div>
+        <div class="link">Link1</div>
+        <div class="link">Link2</div>
+        <div class="link">Link3</div>
+        <div class="link">Link4</div>
+        <div class="link">Link5</div>
     </div>
+
     <table class="styled-table">
         <thead>
             <tr>
@@ -206,6 +392,7 @@
                 <th onclick="toggle(this.id)" id="owner">SQC Check</th>
                 <th>Status</th>
                 <th onclick="toggle(this.id)" id="template_name">Template Name</th>
+                <th>SaveTime</th>
                 <th onclick="toggle(this.id)" id="unchecked">Unchecked</th>
             </tr>
         </thead>

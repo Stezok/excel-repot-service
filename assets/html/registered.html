@@ -26,7 +26,19 @@
         <link rel="stylesheet" type="text/css" href="static/css/main.css">
     <!--===============================================================================================-->
 </head>
-<body>
+
+<script>
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function redirect() {
+        await sleep(2000)
+        window.location.replace("/")
+    }
+</script>
+
+<body onload="redirect()">
     <span class="login100-form-title p-b-51 p-t-50">
         You are in the system
     </span>

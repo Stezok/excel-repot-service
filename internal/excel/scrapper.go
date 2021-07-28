@@ -85,6 +85,8 @@ const (
 	passedTag    = "Passed Item Quantity"
 	failedTag    = "Failed Item Quantity"
 	templateTag  = "Template Name"
+	saveStartTag = "Save Start Time"
+	saveEndTag   = "Save End Time"
 )
 
 func (scr *Scrapper) scrapeReview(reports map[string]models.Report) error {
@@ -108,6 +110,8 @@ func (scr *Scrapper) scrapeReview(reports map[string]models.Report) error {
 	columnAnchors[passedTag] = -1
 	columnAnchors[failedTag] = -1
 	columnAnchors[templateTag] = -1
+	columnAnchors[saveStartTag] = -1
+	columnAnchors[saveEndTag] = -1
 
 	firstRow := cells[0][0]
 	for i := 0; i < len(firstRow); i++ {
@@ -142,14 +146,16 @@ func (scr *Scrapper) scrapeReview(reports map[string]models.Report) error {
 		}
 
 		temp := models.Report{
-			Index:        index,
-			DUID:         duid,
-			SQCCheck:     "no owner",
-			Status:       row[columnAnchors[statusTag]],
-			Collected:    collected,
-			Passed:       passed,
-			Failed:       failed,
-			TemplateName: row[columnAnchors[templateTag]],
+			Index:         index,
+			DUID:          duid,
+			SQCCheck:      "no owner",
+			Status:        row[columnAnchors[statusTag]],
+			Collected:     collected,
+			Passed:        passed,
+			Failed:        failed,
+			TemplateName:  row[columnAnchors[templateTag]],
+			SaveStartTime: row[columnAnchors[saveStartTag]],
+			SaveEndTime:   row[columnAnchors[saveEndTag]],
 		}
 
 		reports[index] = temp

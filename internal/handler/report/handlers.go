@@ -63,7 +63,13 @@ func (h *ReportHandler) HandlerData(ctx *gin.Context) {
 
 	var adaptedReports []ReportJSAdapter
 	for _, report := range reports {
-		adaptedReports = append(adaptedReports, NewReportJSAdapter(report))
+		adapter, err := NewReportJSAdapter(report)
+		if err != nil {
+			h.logger.Print(err)
+			continue
+		}
+
+		adaptedReports = append(adaptedReports, adapter)
 	}
 
 	ctx.JSON(http.StatusOK, adaptedReports)
