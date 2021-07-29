@@ -18,11 +18,6 @@ type ReportJSAdapter struct {
 const layout = "2006-01-02 15:04:05"
 
 func NewReportJSAdapter(report models.Report) (adapter ReportJSAdapter, err error) {
-	saveStartTime, err := time.Parse(layout, report.SaveStartTime)
-	if err != nil {
-		return
-	}
-
 	saveEndTime, _ := time.Parse(layout, report.SaveEndTime)
 	if err != nil {
 		return
@@ -34,7 +29,7 @@ func NewReportJSAdapter(report models.Report) (adapter ReportJSAdapter, err erro
 		Status:       report.Status,
 		TemplateName: report.TemplateName,
 		Unchecked:    report.Collected - (report.Passed + report.Failed),
-		SaveTime:     saveEndTime.Unix() - saveStartTime.Unix(),
+		SaveTime:     time.Now().Unix() - saveEndTime.Unix(),
 	}
 	return
 }
