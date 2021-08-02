@@ -234,15 +234,16 @@
     }
 
     function secToDur(seconds) {
-        
+        console.log(seconds)
+
         sec = seconds % 60
-        seconds = Math.floor(seconds / 60)
+        seconds = (seconds - sec) / 60
 
         min = seconds % 60
-        seconds = Math.floor(seconds / 60)
+        seconds = (seconds - min) / 60
 
         h = seconds % 24
-        seconds = Math.floor(seconds / 24)
+        seconds = (seconds - h) / 24
 
         d = seconds
 

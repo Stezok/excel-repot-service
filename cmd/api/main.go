@@ -8,7 +8,6 @@ import (
 	"github.com/Stezok/excel-repot-service/internal/repository"
 	dbredis "github.com/Stezok/excel-repot-service/internal/repository/redis"
 	"github.com/Stezok/excel-repot-service/internal/service"
-	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -31,7 +30,7 @@ func main() {
 		ReportService:     service.NewCashedReportService(repo, scrapper),
 	}
 
-	gin.SetMode(gin.ReleaseMode)
+	// gin.SetMode(gin.ReleaseMode)
 	handler := report.NewReportHandler(log.Default(), service)
 
 	router := handler.InitRoutes()
