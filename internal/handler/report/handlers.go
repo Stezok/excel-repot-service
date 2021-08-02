@@ -46,7 +46,7 @@ func (h *ReportHandler) HandleLogin(ctx *gin.Context) {
 	}
 
 	ctx.SetCookie("auth_token", token, 60*60*24, "/", "localhost", false, true)
-	ctx.Redirect(http.StatusMovedPermanently, "/report/")
+	ctx.Redirect(http.StatusMovedPermanently, "/")
 }
 
 func (h *ReportHandler) HandlerIndex(ctx *gin.Context) {
