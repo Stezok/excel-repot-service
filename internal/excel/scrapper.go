@@ -2,6 +2,8 @@ package excel
 
 import (
 	"errors"
+	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/Stezok/excel-repot-service/internal/models"
@@ -51,28 +53,35 @@ func (scr *Scrapper) scrapePlan(reports map[string]models.Report) error {
 	for i := 1; i < len(cells[0]); i++ {
 		row := cells[0][i]
 		duid := row[columnAnchors[duidTag]]
-		if duid == "" {
+		if _, ok := reports[duid]; !ok || duid == "" {
 			continue
 		}
 
-		if _, ok := reports[duid]; ok {
-			temp := reports[duid]
+		i := 0
+		for {
+			var id string
+			log.Print(i)
+			if i == 0 {
+				id = duid
+			} else {
+				id = fmt.Sprintf("%d::%s", i, duid)
+			}
 
-			if temp.SQCCheck != "no owner" {
-				if _, ok := reports["second::"+duid]; !ok {
-					temp.Index = "second::" + temp.Index
-					temp.SQCCheck = row[columnAnchors[sqcCheckTag]]
-					reports[temp.Index] = temp
-					continue
-				} else {
-					temp = reports["second::"+duid]
-					temp.SQCCheck = row[columnAnchors[sqcCheckTag]]
-					reports["second::"+duid] = temp
+			if val, ok := reports[id]; ok {
+				if val.SQCCheck == "no owner" {
+					val.SQCCheck = row[columnAnchors[sqcCheckTag]]
+					reports[id] = val
+					break
 				}
 			} else {
-				temp.SQCCheck = row[columnAnchors[sqcCheckTag]]
-				reports[duid] = temp
+				origin := reports[duid]
+				origin.Index = id
+				origin.SQCCheck = row[columnAnchors[sqcCheckTag]]
+				reports[id] = origin
+				break
 			}
+
+			i++
 		}
 	}
 
@@ -129,21 +138,18 @@ func (scr *Scrapper) scrapeReview(reports map[string]models.Report) error {
 
 		collected, err := strconv.Atoi(row[columnAnchors[collectedTag]])
 		if err != nil {
-			continue
+			collected = 0
 		}
 		passed, err := strconv.Atoi(row[columnAnchors[passedTag]])
 		if err != nil {
-			continue
+			passed = 0
 		}
 		failed, err := strconv.Atoi(row[columnAnchors[failedTag]])
 		if err != nil {
-			continue
+			failed = 0
 		}
 
 		index := duid
-		if _, ok := reports[index]; ok {
-			index = "second:" + duid
-		}
 
 		temp := models.Report{
 			Index:         index,
@@ -177,7 +183,7 @@ func (scr *Scrapper) ScrapeReports() (reports []models.Report, err error) {
 	for _, report := range reportMap {
 		reports = append(reports, report)
 	}
-
+	log.Print(reports)
 	return
 }
 
