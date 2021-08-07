@@ -151,6 +151,17 @@ func (scr *Scrapper) scrapeReview(reports map[string]models.Report) error {
 
 		index := duid
 
+		i := 0
+		for {
+			if i != 0 {
+				index = fmt.Sprintf("%d::%s", i, duid)
+			}
+
+			if _, ok := reports[index]; !ok {
+				break
+			}
+		}
+
 		temp := models.Report{
 			Index:         index,
 			DUID:          duid,
