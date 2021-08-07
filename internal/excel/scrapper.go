@@ -160,6 +160,7 @@ func (scr *Scrapper) scrapeReview(reports map[string]models.Report) error {
 			if _, ok := reports[index]; !ok {
 				break
 			}
+			i++
 		}
 
 		temp := models.Report{
