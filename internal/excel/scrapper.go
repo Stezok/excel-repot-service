@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/Stezok/excel-repot-service/internal/models"
 	"github.com/tealeg/xlsx/v3"
@@ -22,7 +23,14 @@ type Scrapper struct {
 const (
 	duidTag     = "DU ID"
 	sqcCheckTag = "SQC check"
+	dateTag     = "Date of SWAP"
 )
+
+func IsToday(date time.Time) bool {
+	y1, m1, d1 := date.Date()
+	y2, m2, d2 := time.Now().Date()
+	return y1 == y2 && m1 == m2 && d1 == d2
+}
 
 func (scr *Scrapper) scrapePlan(reports map[string]models.Report) error {
 	file, err := xlsx.OpenFile(scr.planPath)
@@ -42,6 +50,7 @@ func (scr *Scrapper) scrapePlan(reports map[string]models.Report) error {
 	columnAnchors := make(map[string]int)
 	columnAnchors[duidTag] = -1
 	columnAnchors[sqcCheckTag] = -1
+	columnAnchors[dateTag] = -1
 
 	firstRow := cells[0][0]
 	for i := 0; i < len(firstRow); i++ {
@@ -54,6 +63,10 @@ func (scr *Scrapper) scrapePlan(reports map[string]models.Report) error {
 		row := cells[0][i]
 		duid := row[columnAnchors[duidTag]]
 		if _, ok := reports[duid]; !ok || duid == "" {
+			continue
+		}
+		date, err := time.Parse("01.02.2006", row[columnAnchors[dateTag]])
+		if err != nil || !IsToday(date) {
 			continue
 		}
 
@@ -71,13 +84,8 @@ func (scr *Scrapper) scrapePlan(reports map[string]models.Report) error {
 				if val.SQCCheck == "no owner" {
 					val.SQCCheck = row[columnAnchors[sqcCheckTag]]
 					reports[id] = val
-					break
 				}
 			} else {
-				origin := reports[duid]
-				origin.Index = id
-				origin.SQCCheck = row[columnAnchors[sqcCheckTag]]
-				reports[id] = origin
 				break
 			}
 
