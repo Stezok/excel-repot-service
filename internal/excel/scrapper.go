@@ -65,10 +65,12 @@ func (scr *Scrapper) scrapePlan(reports map[string]models.Report) error {
 		if _, ok := reports[duid]; !ok || duid == "" {
 			continue
 		}
-		date, err := time.Parse("01.02.2006", row[columnAnchors[dateTag]])
-		if err != nil || !IsToday(date) {
-			continue
-		}
+
+		// date, err := time.Parse("01.02.2006", row[columnAnchors[dateTag]])
+		// if err != nil || !IsToday(date) {
+		// 	log.Print(err)
+		// 	continue
+		// }
 
 		i := 0
 		for {
