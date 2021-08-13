@@ -1,0 +1,16 @@
+# App Config
+app:
+  download_path: "YOUR PATH"
+  plan_path: "path.xlsx"
+  review_path: "review.xlsx"
+# Server Config
+server:
+  host: "localhost"
+  port: 8080
+  token_secret: "YOUR SECRET"
+  static_path: "../../web"
+  html_glob_path: "../../web/html/*.html"
+#Redis Config
+redis:
+  host: ""
+  port: 6379

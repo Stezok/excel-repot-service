@@ -29,16 +29,23 @@ type Service interface {
 	ReportService
 }
 
+type ReportHandlerConfig struct {
+	PathToStatic   string
+	PathToHTMLGlob string
+}
+
 type ReportHandler struct {
-	logger  Logger
-	service Service
+	ReportHandlerConfig
+
+	Logger  Logger
+	Service Service
 }
 
 func (h *ReportHandler) InitRoutes() *gin.Engine {
 	router := gin.New()
 
-	router.Static("/static", "../../assets")
-	router.LoadHTMLGlob("../../assets/html/*.html")
+	router.Static("/static", h.PathToStatic)
+	router.LoadHTMLGlob(h.PathToHTMLGlob)
 
 	router.Use(h.MiddlewareAuth())
 	router.GET("/login", h.HandleLoginPage)
@@ -59,7 +66,7 @@ func (h *ReportHandler) InitRoutes() *gin.Engine {
 
 func NewReportHandler(logger Logger, service Service) *ReportHandler {
 	return &ReportHandler{
-		logger:  logger,
-		service: service,
+		Logger:  logger,
+		Service: service,
 	}
 }

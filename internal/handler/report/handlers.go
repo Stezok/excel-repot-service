@@ -22,14 +22,14 @@ func (h *ReportHandler) HandleLogin(ctx *gin.Context) {
 	err := ctx.Bind(&loginForm)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 
-	ok, err := h.service.Login(loginForm.Password)
+	ok, err := h.Service.Login(loginForm.Password)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 
@@ -41,7 +41,7 @@ func (h *ReportHandler) HandleLogin(ctx *gin.Context) {
 	token, err := CreateToken()
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 
@@ -54,10 +54,10 @@ func (h *ReportHandler) HandlerIndex(ctx *gin.Context) {
 }
 
 func (h *ReportHandler) HandlerData(ctx *gin.Context) {
-	reports, err := h.service.GetReports()
+	reports, err := h.Service.GetReports()
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 
@@ -65,7 +65,7 @@ func (h *ReportHandler) HandlerData(ctx *gin.Context) {
 	for _, report := range reports {
 		adapter, err := NewReportJSAdapter(report)
 		if err != nil {
-			h.logger.Print(err)
+			h.Logger.Print(err)
 			continue
 		}
 
@@ -83,41 +83,41 @@ func (h *ReportHandler) HandleUpdatePlan(ctx *gin.Context) {
 	uploadedFile, err := ctx.FormFile("plan")
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 
 	filename := "temp_plan.xlsx"
 	if err = ctx.SaveUploadedFile(uploadedFile, filename); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 
 	err = SafeCopyFile("plan.xlsx", "temp_plan.xlsx")
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 
 	err = os.Remove("temp_plan.xlsx")
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 
-	_, err = h.service.UpdateReports()
+	_, err = h.Service.UpdateReports()
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
-	err = h.service.SetLastUpdateTime(time.Now().Unix())
+	err = h.Service.SetLastUpdateTime(time.Now().Unix())
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 }
@@ -126,50 +126,50 @@ func (h *ReportHandler) HandleUpdateReview(ctx *gin.Context) {
 	uploadedFile, err := ctx.FormFile("review")
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 
 	filename := "temp_review.xlsx"
 	if err = ctx.SaveUploadedFile(uploadedFile, filename); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 
 	err = SafeCopyFile("review.xlsx", "temp_review.xlsx")
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 
 	err = os.Remove("temp_review.xlsx")
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 
-	_, err = h.service.UpdateReports()
+	_, err = h.Service.UpdateReports()
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
-	err = h.service.SetLastUpdateTime(time.Now().Unix())
+	err = h.Service.SetLastUpdateTime(time.Now().Unix())
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 }
 
 func (h *ReportHandler) HandlerLastUpdateTime(ctx *gin.Context) {
-	lastUpdateTime, err := h.service.GetLastUpdateTime()
+	lastUpdateTime, err := h.Service.GetLastUpdateTime()
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
-		h.logger.Print(err)
+		h.Logger.Print(err)
 		return
 	}
 

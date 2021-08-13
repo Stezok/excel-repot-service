@@ -15,7 +15,7 @@ func (h *ReportHandler) MiddlewareAuth() gin.HandlerFunc {
 		}
 
 		if ok, err := IsValidToken(token); !ok || err != nil {
-			h.logger.Print(err)
+			h.Logger.Print(err)
 			ctx.Next()
 			return
 		}
