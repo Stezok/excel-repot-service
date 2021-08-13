@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/Stezok/excel-repot-service/internal/automatic/updater"
 	"github.com/Stezok/excel-repot-service/internal/config"
 	"github.com/Stezok/excel-repot-service/internal/excel"
 	"github.com/Stezok/excel-repot-service/internal/handler/report"
@@ -57,6 +59,17 @@ func main() {
 			PathToHTMLGlob: conf.Server.PathToHTMLGlob,
 		},
 	}
+
+	updaterConf := updater.UpdaterConfig{
+		SeleniumPath: conf.Updater.SeleniumPath,
+		Mode:         conf.Updater.BrowserMode,
+		Port:         conf.Updater.Port,
+		ReviewPath:   conf.App.ReviewPath,
+		DownloadPath: conf.Updater.DownloadPath,
+	}
+	upd := updater.NewUpdater(updaterConf)
+
+	upd.UpdateEvery(15 * time.Minute)
 
 	addr := fmt.Sprintf("%s:%d", conf.Server.Host, conf.Server.Port)
 	handler.InitRoutes().Run(addr)

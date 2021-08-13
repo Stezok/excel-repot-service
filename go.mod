@@ -9,6 +9,7 @@ require (
 	github.com/spf13/cast v1.4.0 // indirect
 	github.com/spf13/viper v1.8.1
 	github.com/tealeg/xlsx/v3 v3.2.3
+	github.com/tebeka/selenium v0.9.9 
 	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e // indirect
 	golang.org/x/text v0.3.7 // indirect
 )

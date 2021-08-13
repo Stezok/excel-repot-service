@@ -11,9 +11,8 @@ type ServerConfig struct {
 }
 
 type AppConfig struct {
-	DownloadPath string `mapstructure:"download_path"`
-	PlanPath     string `mapstructure:"plan_path"`
-	ReviewPath   string `mapstructure:"review_path"`
+	PlanPath   string `mapstructure:"plan_path"`
+	ReviewPath string `mapstructure:"review_path"`
 }
 
 type RedisConfig struct {
@@ -21,12 +20,24 @@ type RedisConfig struct {
 	Port int    `mapstructure:"port"`
 }
 
+type UpdaterConfig struct {
+	DownloadPath   string `mapstructure:"download_path"`
+	SeleniumPath   string `mapstructure:"selenium_path"`
+	BrowserMode    string `mapstructure:"browser_mode"`
+	Port           int    `mapstructure:"port"`
+	HuaweiLogin    string `mapstructure:"huawei_login"`
+	HuaweiPassword string `mapstructure:"huawei_password"`
+}
+
 type Config struct {
-	App    AppConfig    `mapstructure:"app"`
-	Server ServerConfig `mapstructure:"server"`
-	Redis  RedisConfig  `mapstructure:"redis"`
+	App     AppConfig     `mapstructure:"app"`
+	Server  ServerConfig  `mapstructure:"server"`
+	Redis   RedisConfig   `mapstructure:"redis"`
+	Updater UpdaterConfig `mapstructure:"updater"`
 }
 
 func (conf *Config) PushToOSEnv() {
 	os.Setenv("AUTH_SECRET", conf.Server.TokenSecret)
+	os.Setenv("HUAWEI_LOGIN", conf.Updater.HuaweiLogin)
+	os.Setenv("HUAWEI_PASS", conf.Updater.HuaweiPassword)
 }

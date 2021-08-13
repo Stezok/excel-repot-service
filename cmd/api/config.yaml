@@ -1,6 +1,5 @@
 # App Config
 app:
-  download_path: "YOUR PATH"
   plan_path: "path.xlsx"
   review_path: "review.xlsx"
 # Server Config
@@ -14,3 +13,11 @@ server:
 redis:
   host: ""
   port: 6379
+#Updater Config
+updater:
+  download_path: "YOUR PATH"
+  selenium_path: "YOUR PATH"
+  browser_mode: "default" # default or headless
+  port: 9515
+  huawei_login: "login"
+  huawei_password: "pass"

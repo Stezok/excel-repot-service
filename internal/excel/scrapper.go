@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/Stezok/excel-repot-service/internal/models"
@@ -18,6 +19,8 @@ var (
 type Scrapper struct {
 	planPath   string
 	reviewPath string
+
+	mu sync.Mutex
 }
 
 const (
@@ -192,6 +195,9 @@ func (scr *Scrapper) scrapeReview(reports map[string]models.Report) error {
 }
 
 func (scr *Scrapper) ScrapeReports() (reports []models.Report, err error) {
+	scr.mu.Lock()
+	defer scr.mu.Unlock()
+
 	reportMap := make(map[string]models.Report)
 	err = scr.scrapeReview(reportMap)
 	if err != nil {
