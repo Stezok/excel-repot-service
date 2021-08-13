@@ -1,23 +1,23 @@
 # App Config
 app:
-  plan_path: "path.xlsx"
-  review_path: "review.xlsx"
+  plan_path: "plan.xlsx" # path to plan file 
+  review_path: "review.xlsx" # path to review file
 # Server Config
 server:
-  host: "localhost"
-  port: 8080
-  token_secret: "YOUR SECRET"
-  static_path: "../../web"
-  html_glob_path: "../../web/html/*.html"
+  host: "localhost" # app host
+  port: 8080 # app port
+  token_secret: "YOUR SECRET" # random string for jwt tokens
+  static_path: "../../web" # path to app static files
+  html_glob_path: "../../web/html/*.html" # glob of app html
 #Redis Config
 redis:
-  host: ""
-  port: 6379
+  host: "" # redis host
+  port: 6379 # redis port 
 #Updater Config
 updater:
-  download_path: "YOUR PATH"
-  selenium_path: "YOUR PATH"
+  download_path: "YOUR PATH" # path to your default download dir
+  selenium_path: "YOUR PATH" # path to selenium driver
   browser_mode: "default" # default or headless
-  port: 9515
+  port: 9515 # selenium server port
   huawei_login: "login"
   huawei_password: "pass"
