@@ -140,9 +140,15 @@ func (u *Updater) UpdateReview() error {
 		}...)
 	}
 
+	prefs := make(map[string]interface{})
+	prefs["download"] = map[string]string{
+		"default_directory": u.DownloadPath,
+	}
+
 	chromeCaps := chrome.Capabilities{
-		Path: "",
-		Args: args,
+		Prefs: prefs,
+		Path:  "",
+		Args:  args,
 	}
 	caps.AddChrome(chromeCaps)
 
