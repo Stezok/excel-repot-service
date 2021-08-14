@@ -3,12 +3,13 @@ package updater
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/tebeka/selenium"
-	"github.com/tebeka/selenium/chrome"
+	"github.com/tebeka/selenium/firefox"
 )
 
 type Logger interface {
@@ -99,11 +100,13 @@ func (u *Updater) clickExport(wd selenium.WebDriver) error {
 	wd.SwitchFrame("microServicesIframeItemTodo")
 	defer wd.SwitchFrame(nil)
 
-	elem, err := wd.FindElement(selenium.ByCSSSelector, "div.button-export button.hae-btn")
-	if err != nil {
-		return err
-	}
-	return elem.Click()
+	_, err := wd.ExecuteScript(`dociment.querySelect("div.button-export button.hae-btn").click()`, nil)
+	return err
+	// elem, err := wd.FindElement(selenium.ByCSSSelector, "div.button-export button.hae-btn")
+	// if err != nil {
+	// 	return err
+	// }
+	// return elem.Click()
 }
 
 func (u *Updater) downloadReview(wd selenium.WebDriver) error {
@@ -145,12 +148,11 @@ func (u *Updater) UpdateReview() error {
 		"default_directory": u.DownloadPath,
 	}
 
-	chromeCaps := chrome.Capabilities{
+	firefoxCaps := firefox.Capabilities{
 		Prefs: prefs,
-		Path:  "",
 		Args:  args,
 	}
-	caps.AddChrome(chromeCaps)
+	caps.AddFirefox(firefoxCaps)
 
 	addr := fmt.Sprintf("http://localhost:%d/wd/hub", u.Port)
 	wd, err := selenium.NewRemote(caps, addr)
@@ -218,5 +220,6 @@ func (u *Updater) UpdateEvery(dur time.Duration) {
 func NewUpdater(conf UpdaterConfig) *Updater {
 	return &Updater{
 		UpdaterConfig: conf,
+		Logger:        log.Default(),
 	}
 }
