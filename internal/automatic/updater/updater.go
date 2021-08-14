@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/Stezok/excel-repot-service/internal/service"
 	"github.com/tebeka/selenium"
 	"github.com/tebeka/selenium/firefox"
 )
@@ -27,7 +28,8 @@ type UpdaterConfig struct {
 
 type Updater struct {
 	UpdaterConfig
-	Logger Logger
+	Logger  Logger
+	Service service.ReportService
 }
 
 func (u *Updater) isLoginPage(wd selenium.WebDriver) (bool, error) {
@@ -40,6 +42,11 @@ func (u *Updater) isLoginPage(wd selenium.WebDriver) (bool, error) {
 }
 
 func (u *Updater) login(wd selenium.WebDriver) error {
+	err := wd.Get("https://uniportal.huawei.com/uniportal/")
+	if err != nil {
+		return err
+	}
+
 	elem, err := wd.FindElement(selenium.ByCSSSelector, "input#uid")
 	if err != nil {
 		return err
@@ -100,13 +107,13 @@ func (u *Updater) clickExport(wd selenium.WebDriver) error {
 	wd.SwitchFrame("microServicesIframeItemTodo")
 	defer wd.SwitchFrame(nil)
 
-	_, err := wd.ExecuteScript(`dociment.querySelect("div.button-export button.hae-btn").click()`, nil)
-	return err
-	// elem, err := wd.FindElement(selenium.ByCSSSelector, "div.button-export button.hae-btn")
-	// if err != nil {
-	// 	return err
-	// }
-	// return elem.Click()
+	// _, err := wd.ExecuteScript(`document.querySelector("div.button-export button.hae-btn").click()`, nil)
+	// return err
+	elem, err := wd.FindElement(selenium.ByCSSSelector, "div.button-export button.hae-btn")
+	if err != nil {
+		return err
+	}
+	return elem.Click()
 }
 
 func (u *Updater) downloadReview(wd selenium.WebDriver) error {
@@ -161,6 +168,12 @@ func (u *Updater) UpdateReview() error {
 	}
 	defer wd.Quit()
 
+	err = u.login(wd)
+	if err != nil {
+		panic(err)
+	}
+	time.Sleep(10 * time.Second)
+
 	err = u.getTaskShowPage(wd)
 	if err != nil {
 		panic(err)
@@ -198,11 +211,15 @@ func (u *Updater) UpdateReview() error {
 	}
 
 	newFile.Close()
+	oldFile.Close()
+
 	for _, path := range paths {
 		os.Remove(path)
 	}
 
-	return nil
+	_, err = u.Service.UpdateReports()
+
+	return err
 }
 
 func (u *Updater) UpdateEvery(dur time.Duration) {
@@ -217,9 +234,10 @@ func (u *Updater) UpdateEvery(dur time.Duration) {
 	}()
 }
 
-func NewUpdater(conf UpdaterConfig) *Updater {
+func NewUpdater(conf UpdaterConfig, service service.ReportService) *Updater {
 	return &Updater{
 		UpdaterConfig: conf,
+		Service:       service,
 		Logger:        log.Default(),
 	}
 }

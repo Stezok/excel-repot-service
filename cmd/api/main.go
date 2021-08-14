@@ -51,6 +51,16 @@ func main() {
 		ReportService:     service.NewCashedReportService(repo, scrapper),
 	}
 
+	updaterConf := updater.UpdaterConfig{
+		SeleniumPath: conf.Updater.SeleniumPath,
+		Mode:         conf.Updater.BrowserMode,
+		Port:         conf.Updater.Port,
+		ReviewPath:   conf.App.ReviewPath,
+		DownloadPath: conf.Updater.DownloadPath,
+	}
+	upd := updater.NewUpdater(updaterConf, service.ReportService)
+	upd.UpdateEvery(15 * time.Minute)
+
 	handler := &report.ReportHandler{
 		Logger:  log.Default(),
 		Service: service,
@@ -59,18 +69,6 @@ func main() {
 			PathToHTMLGlob: conf.Server.PathToHTMLGlob,
 		},
 	}
-
-	updaterConf := updater.UpdaterConfig{
-		SeleniumPath: conf.Updater.SeleniumPath,
-		Mode:         conf.Updater.BrowserMode,
-		Port:         conf.Updater.Port,
-		ReviewPath:   conf.App.ReviewPath,
-		DownloadPath: conf.Updater.DownloadPath,
-	}
-	upd := updater.NewUpdater(updaterConf)
-
-	upd.UpdateEvery(15 * time.Minute)
-
 	addr := fmt.Sprintf("%s:%d", conf.Server.Host, conf.Server.Port)
 	handler.InitRoutes().Run(addr)
 }
