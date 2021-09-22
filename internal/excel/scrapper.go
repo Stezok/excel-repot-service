@@ -3,7 +3,6 @@ package excel
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -78,7 +77,6 @@ func (scr *Scrapper) scrapePlan(reports map[string]models.Report) error {
 		i := 0
 		for {
 			var id string
-			log.Print(i)
 			if i == 0 {
 				id = duid
 			} else {
@@ -194,9 +192,18 @@ func (scr *Scrapper) scrapeReview(reports map[string]models.Report) error {
 	return nil
 }
 
-func (scr *Scrapper) ScrapeReports() (reports []models.Report, err error) {
+func (scr *Scrapper) ScrapeReports(tag string) (reports []models.Report, err error) {
 	scr.mu.Lock()
 	defer scr.mu.Unlock()
+
+	oldR := scr.reviewPath
+	oldP := scr.planPath
+	scr.reviewPath = fmt.Sprintf(oldR, tag)
+	scr.planPath = fmt.Sprintf(oldP, tag)
+	defer func() {
+		scr.reviewPath = oldR
+		scr.planPath = oldP
+	}()
 
 	reportMap := make(map[string]models.Report)
 	err = scr.scrapeReview(reportMap)
@@ -211,7 +218,7 @@ func (scr *Scrapper) ScrapeReports() (reports []models.Report, err error) {
 	for _, report := range reportMap {
 		reports = append(reports, report)
 	}
-	log.Print(reports)
+
 	return
 }
 

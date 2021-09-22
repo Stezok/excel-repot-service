@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -36,6 +37,8 @@ func main() {
 	client := redis.NewClient(&redis.Options{
 		Addr: redisAddr,
 	})
+	status := client.Ping(context.Background())
+	log.Print(status)
 
 	repo := repository.Repository{
 		AuthRepository:       dbredis.NewRedisAuthRepository(client),
@@ -58,8 +61,21 @@ func main() {
 		ReviewPath:   conf.App.ReviewPath,
 		DownloadPath: conf.Updater.DownloadPath,
 	}
-	upd := updater.NewUpdater(updaterConf, service.ReportService)
-	upd.UpdateEvery(15 * time.Minute)
+	upd := updater.NewUpdater(updaterConf, service.ReportService, service.UpdateTimeService)
+	go upd.Run()
+
+	go func() {
+		delayBetween := time.Duration(10 * int(time.Minute) / len(conf.Updater.HuaweiAccounts))
+		for _, project := range conf.Updater.HuaweiAccounts {
+			job := updater.UpdateJob{
+				HuaweiLogin:    project.HuaweiLogin,
+				HuaweiPassword: project.HuaweiPassword,
+				ProjectID:      project.ProjectID,
+			}
+			upd.PushJobEvery(job, 10*time.Minute)
+			time.Sleep(delayBetween)
+		}
+	}()
 
 	handler := &report.ReportHandler{
 		Logger:  log.Default(),

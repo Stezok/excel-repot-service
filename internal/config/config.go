@@ -25,8 +25,11 @@ type UpdaterConfig struct {
 	SeleniumPath   string `mapstructure:"selenium_path"`
 	BrowserMode    string `mapstructure:"browser_mode"`
 	Port           int    `mapstructure:"port"`
-	HuaweiLogin    string `mapstructure:"huawei_login"`
-	HuaweiPassword string `mapstructure:"huawei_password"`
+	HuaweiAccounts []struct {
+		HuaweiLogin    string `mapstructure:"huawei_login"`
+		HuaweiPassword string `mapstructure:"huawei_password"`
+		ProjectID      string `mapstructure:"project_id"`
+	} `mapstructure:"huawei_projects"`
 }
 
 type Config struct {
@@ -38,6 +41,6 @@ type Config struct {
 
 func (conf *Config) PushToOSEnv() {
 	os.Setenv("AUTH_SECRET", conf.Server.TokenSecret)
-	os.Setenv("HUAWEI_LOGIN", conf.Updater.HuaweiLogin)
-	os.Setenv("HUAWEI_PASS", conf.Updater.HuaweiPassword)
+	// os.Setenv("HUAWEI_LOGIN", conf.Updater.HuaweiLogin)
+	// os.Setenv("HUAWEI_PASS", conf.Updater.HuaweiPassword)
 }

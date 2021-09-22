@@ -7,13 +7,13 @@ type AuthService interface {
 }
 
 type UpdateTimeService interface {
-	GetLastUpdateTime() (int64, error)
-	SetLastUpdateTime(int64) error
+	GetLastUpdateTime(string) (int64, error)
+	SetLastUpdateTime(string, int64) error
 }
 
 type ReportService interface {
-	UpdateReports() ([]models.Report, error)
-	GetReports() ([]models.Report, error)
+	UpdateReports(string) ([]models.Report, error)
+	GetReports(string) ([]models.Report, error)
 }
 
 type Service struct {

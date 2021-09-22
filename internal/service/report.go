@@ -3,14 +3,14 @@ package service
 import "github.com/Stezok/excel-repot-service/internal/models"
 
 type ReportRepository interface {
-	GetReportsKeys() ([]string, error)
-	GetReport(string) (models.Report, error)
-	SetReport(models.Report) error
-	DeleteReports() error
+	GetReportsKeys(string) ([]string, error)
+	GetReport(string, string) (models.Report, error)
+	SetReport(string, models.Report) error
+	DeleteReports(string) error
 }
 
 type Scrapper interface {
-	ScrapeReports() ([]models.Report, error)
+	ScrapeReports(string) ([]models.Report, error)
 }
 
 type CashedReportService struct {
@@ -18,16 +18,16 @@ type CashedReportService struct {
 	scrapper Scrapper
 }
 
-func (rs *CashedReportService) GetReports() (reports []models.Report, err error) {
+func (rs *CashedReportService) GetReports(tag string) (reports []models.Report, err error) {
 	var keys []string
-	keys, err = rs.repo.GetReportsKeys()
+	keys, err = rs.repo.GetReportsKeys(tag)
 	if err != nil {
 		return
 	}
 
 	for _, key := range keys {
 		var report models.Report
-		report, err = rs.repo.GetReport(key)
+		report, err = rs.repo.GetReport(tag, key)
 		if err != nil {
 			return
 		}
@@ -37,19 +37,19 @@ func (rs *CashedReportService) GetReports() (reports []models.Report, err error)
 	return
 }
 
-func (rs *CashedReportService) UpdateReports() (reports []models.Report, err error) {
-	reports, err = rs.scrapper.ScrapeReports()
+func (rs *CashedReportService) UpdateReports(tag string) (reports []models.Report, err error) {
+	reports, err = rs.scrapper.ScrapeReports(tag)
 	if err != nil {
 		return
 	}
 
-	err = rs.repo.DeleteReports()
+	err = rs.repo.DeleteReports(tag)
 	if err != nil {
 		return
 	}
 
 	for _, report := range reports {
-		err = rs.repo.SetReport(report)
+		err = rs.repo.SetReport(tag, report)
 		if err != nil {
 			return
 		}

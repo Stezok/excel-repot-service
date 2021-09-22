@@ -14,10 +14,11 @@ func (h *ReportHandler) MiddlewareAuth() gin.HandlerFunc {
 			return
 		}
 
-		if ok, err := IsValidToken(token); !ok || err != nil {
-			h.Logger.Print(err)
+		if ok, err := IsValidToken(token); !ok {
 			ctx.Next()
 			return
+		} else if err != nil {
+			h.Logger.Print(err)
 		}
 
 		ctx.Set("registered", true)

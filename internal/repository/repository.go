@@ -7,15 +7,15 @@ type AuthRepository interface {
 }
 
 type UpdateTimeRepository interface {
-	GetLastUpdateTime() (int64, error)
-	SetLastUpdateTime(int64) error
+	GetLastUpdateTime(string) (int64, error)
+	SetLastUpdateTime(string, int64) error
 }
 
 type ReportRepository interface {
-	GetReportsKeys() ([]string, error)
-	GetReport(string) (models.Report, error)
-	SetReport(models.Report) error
-	DeleteReports() error
+	GetReportsKeys(string) ([]string, error)
+	GetReport(string, string) (models.Report, error)
+	SetReport(string, models.Report) error
+	DeleteReports(string) error
 }
 
 type Repository struct {

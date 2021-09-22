@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/go-redis/redis/v8"
@@ -11,10 +12,11 @@ type RedisUpdateTimeRepository struct {
 	client *redis.Client
 }
 
-func (repo *RedisUpdateTimeRepository) GetLastUpdateTime() (time int64, err error) {
+func (repo *RedisUpdateTimeRepository) GetLastUpdateTime(tag string) (time int64, err error) {
 	ctx := context.Background()
 	var result string
-	result, err = repo.client.Get(ctx, "update_time:last").Result()
+	tag = fmt.Sprintf("update_time:%s", tag)
+	result, err = repo.client.Get(ctx, tag).Result()
 	if err != nil {
 		return
 	}
@@ -23,9 +25,10 @@ func (repo *RedisUpdateTimeRepository) GetLastUpdateTime() (time int64, err erro
 	return
 }
 
-func (repo *RedisUpdateTimeRepository) SetLastUpdateTime(time int64) error {
+func (repo *RedisUpdateTimeRepository) SetLastUpdateTime(tag string, time int64) error {
 	ctx := context.Background()
-	return repo.client.Set(ctx, "update_time:last", time, 0).Err()
+	tag = fmt.Sprintf("update_time:%s", tag)
+	return repo.client.Set(ctx, tag, time, 0).Err()
 }
 
 func NewRedisUpdateTimeRepository(client *redis.Client) *RedisUpdateTimeRepository {

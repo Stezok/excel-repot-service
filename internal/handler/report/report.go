@@ -14,13 +14,13 @@ type AuthService interface {
 }
 
 type UpdateTimeService interface {
-	GetLastUpdateTime() (int64, error)
-	SetLastUpdateTime(int64) error
+	GetLastUpdateTime(string) (int64, error)
+	SetLastUpdateTime(string, int64) error
 }
 
 type ReportService interface {
-	GetReports() ([]models.Report, error)
-	UpdateReports() ([]models.Report, error)
+	GetReports(string) ([]models.Report, error)
+	UpdateReports(string) ([]models.Report, error)
 }
 
 type Service interface {
@@ -53,12 +53,12 @@ func (h *ReportHandler) InitRoutes() *gin.Engine {
 
 	auth := router.Group("/", h.MiddlewareAuthRequired())
 	{
-		auth.GET("/", h.HandlerIndex)
-		auth.GET("/data", h.HandlerData)
-		auth.GET("/update", h.HandleUpdatePage)
-		auth.POST("/update/plan", h.HandleUpdatePlan)
-		auth.POST("/update/review", h.HandleUpdateReview)
-		auth.GET("/lastUpdateTime", h.HandlerLastUpdateTime)
+		auth.GET("/:tag", h.HandlerIndex)
+		auth.GET("/data/:tag", h.HandlerData)
+		auth.GET("/update/:tag", h.HandleUpdatePage)
+		auth.POST("/update/:tag/plan", h.HandleUpdatePlan)
+		auth.POST("/update/:tag/review", h.HandleUpdateReview)
+		auth.GET("/lastUpdateTime/:tag", h.HandlerLastUpdateTime)
 	}
 
 	return router

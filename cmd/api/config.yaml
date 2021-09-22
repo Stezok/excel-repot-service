@@ -1,7 +1,7 @@
 # App Config
 app:
-  plan_path: "plan.xlsx" # path to plan file 
-  review_path: "review.xlsx" # path to review file
+  plan_path: "plan%s.xlsx" # template path to plan file 
+  review_path: "review%s.xlsx" # template path to review file
 # Server Config
 server:
   host: "localhost" # app host
@@ -15,9 +15,12 @@ redis:
   port: 6379 # redis port 
 #Updater Config
 updater:
-  download_path: "YOUR PATH" # path to your default download dir
-  selenium_path: "YOUR PATH" # path to selenium driver
+  download_path: "" # path to your default download dir
+  selenium_path: "C:/Drivers/chromedriver.exe" # path to selenium driver
   browser_mode: "default" # default or headless
   port: 9515 # selenium server port
-  huawei_login: "login"
-  huawei_password: "pass"
+  huawei_projects:
+    -
+      huawei_login: "login"
+      huawei_password: "pass"
+      project_id: "56A0A8L"

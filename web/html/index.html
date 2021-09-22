@@ -278,7 +278,8 @@
     }
 
     async function init() {
-        let response = await fetch("data");
+        projectID = document.getElementById("tbody").dataset.id
+        let response = await fetch(`data/${projectID}`);
 
         if(response.status == 200) {
             records = await response.json()
@@ -290,17 +291,6 @@
         
         console.log(records)
         present()
-
-        response = await fetch("lastUpdateTime")
-
-        if(response.status == 200) {
-            time = await response.json()
-            date = new Date(time.last_update_time * 1000)
-            document.getElementById("time-text").innerText = date
-        } else {
-            console.log("error while /lastUpdateTime")
-            console.log(response)
-        }
     }
 
     function toggle(id) {
@@ -407,7 +397,7 @@
         <div class="link">Link5</div>
     </div>
 
-    <div id="last-update-time"><strong>Last update time: <span id="time-text"></span></strong></div>
+    <div><strong>Last update time: {{ .LastUpdateTime }} <span class="time-text"></span></strong></div>
 
     <table class="styled-table">
         <thead>
@@ -420,8 +410,7 @@
                 <th onclick="toggle(this.id)" id="unchecked">Unchecked</th>
             </tr>
         </thead>
-        <tbody id="tbody">
-            
+        <tbody id="tbody" data-id="{{ .ID }}">
         </tbody>
-    </table>    
+    </table>   
 </body>

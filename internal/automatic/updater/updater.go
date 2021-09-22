@@ -10,7 +10,7 @@ import (
 
 	"github.com/Stezok/excel-repot-service/internal/service"
 	"github.com/tebeka/selenium"
-	"github.com/tebeka/selenium/firefox"
+	"github.com/tebeka/selenium/chrome"
 )
 
 type Logger interface {
@@ -26,10 +26,18 @@ type UpdaterConfig struct {
 	DownloadPath string
 }
 
+type UpdateJob struct {
+	HuaweiLogin    string
+	HuaweiPassword string
+	ProjectID      string
+}
+
 type Updater struct {
 	UpdaterConfig
-	Logger  Logger
-	Service service.ReportService
+	JobChannel        chan UpdateJob
+	Logger            Logger
+	ReportService     service.ReportService
+	UpdateTimeService service.UpdateTimeService
 }
 
 func (u *Updater) isLoginPage(wd selenium.WebDriver) (bool, error) {
@@ -41,7 +49,7 @@ func (u *Updater) isLoginPage(wd selenium.WebDriver) (bool, error) {
 	return len(elems) != 0, nil
 }
 
-func (u *Updater) login(wd selenium.WebDriver) error {
+func (u *Updater) login(wd selenium.WebDriver, job UpdateJob) error {
 	err := wd.Get("https://uniportal.huawei.com/uniportal/")
 	if err != nil {
 		return err
@@ -52,7 +60,7 @@ func (u *Updater) login(wd selenium.WebDriver) error {
 		return err
 	}
 
-	login := os.Getenv("HUAWEI_LOGIN")
+	login := job.HuaweiLogin
 	err = elem.SendKeys(login)
 	if err != nil {
 		return err
@@ -62,7 +70,7 @@ func (u *Updater) login(wd selenium.WebDriver) error {
 	if err != nil {
 		return err
 	}
-	pass := os.Getenv("HUAWEI_PASS")
+	pass := job.HuaweiPassword
 	err = elem.SendKeys(pass)
 	if err != nil {
 		return err
@@ -77,11 +85,14 @@ func (u *Updater) login(wd selenium.WebDriver) error {
 		return err
 	}
 
+	time.Sleep(3)
 	return nil
 }
 
-func (u *Updater) getTaskShowPage(wd selenium.WebDriver) error {
-	url := "https://app-ru.huawei.com/sdcp/apt/apt#!epasbrgtask/index/myTaskShow.html?currentStatus=DB&indexCode=undefined"
+func (u *Updater) getTaskShowPage(wd selenium.WebDriver, job UpdateJob) error {
+	url := "https://isdp-ru.huawei.com/sdcloud/apt/aui/index.html#/itemToDoIsdp?currentStatus=DB&projectNumber=%s"
+	url = fmt.Sprintf(url, job.ProjectID)
+
 	err := wd.Get(url)
 	if err != nil {
 		return err
@@ -89,17 +100,18 @@ func (u *Updater) getTaskShowPage(wd selenium.WebDriver) error {
 	if isLogin, err := u.isLoginPage(wd); err != nil {
 		return err
 	} else if isLogin {
-		err = u.login(wd)
+		err = u.login(wd, job)
 		if err != nil {
 			return err
 		}
-		time.Sleep(10 * time.Second)
+		time.Sleep(5 * time.Second)
 		err = wd.Get(url)
 		if err != nil {
 			return err
 		}
 	}
 
+	time.Sleep(5 * time.Second)
 	return nil
 }
 
@@ -113,7 +125,13 @@ func (u *Updater) clickExport(wd selenium.WebDriver) error {
 	if err != nil {
 		return err
 	}
-	return elem.Click()
+	err = elem.Click()
+	if err != nil {
+		return err
+	}
+
+	time.Sleep(15 * time.Second)
+	return nil
 }
 
 func (u *Updater) downloadReview(wd selenium.WebDriver) error {
@@ -128,10 +146,16 @@ func (u *Updater) downloadReview(wd selenium.WebDriver) error {
 		return err
 	}
 
-	return elem.Click()
+	err = elem.Click()
+	if err != nil {
+		return err
+	}
+	time.Sleep(3 * time.Second)
+	return nil
 }
 
-func (u *Updater) UpdateReview() error {
+func (u *Updater) UpdateReview(job UpdateJob) error {
+	defer recover()
 	ops := []selenium.ServiceOption{}
 	service, err := selenium.NewChromeDriverService(u.SeleniumPath, u.Port, ops...)
 	if err != nil {
@@ -142,56 +166,55 @@ func (u *Updater) UpdateReview() error {
 	caps := selenium.Capabilities{
 		"browserName": "chrome",
 	}
-	args := []string{"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/604.4.7 (KHTML, like Gecko) Version/11.0.2 Safari/604.4.7"}
+	args := []string{
+		"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/604.4.7 (KHTML, like Gecko) Version/11.0.2 Safari/604.4.7",
+		"--no-sandbox",
+	}
+
 	if u.Mode == "headless" {
-		args = append(args, []string{
-			"--headless",
-			"--no-sandbox",
-		}...)
+		args = append(args, "--headless")
 	}
 
 	prefs := make(map[string]interface{})
-	prefs["download"] = map[string]string{
-		"default_directory": u.DownloadPath,
-	}
+	prefs["download.default_directory"] = u.DownloadPath
 
-	firefoxCaps := firefox.Capabilities{
+	chromeCaps := chrome.Capabilities{
 		Prefs: prefs,
 		Args:  args,
 	}
-	caps.AddFirefox(firefoxCaps)
+	caps.AddChrome(chromeCaps)
 
 	addr := fmt.Sprintf("http://localhost:%d/wd/hub", u.Port)
 	wd, err := selenium.NewRemote(caps, addr)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer wd.Quit()
 
-	err = u.login(wd)
+	err = u.login(wd, job)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	time.Sleep(10 * time.Second)
 
-	err = u.getTaskShowPage(wd)
+	err = u.getTaskShowPage(wd, job)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	time.Sleep(5 * time.Second)
 
 	err = u.clickExport(wd)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	time.Sleep(20 * time.Second)
 
 	err = u.downloadReview(wd)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	paths, err := filepath.Glob(u.DownloadPath + "*.xlsx")
+	if err != nil {
+		return err
+	}
 
 	newFile, err := os.Open(paths[0])
 	if err != nil {
@@ -217,15 +240,30 @@ func (u *Updater) UpdateReview() error {
 		os.Remove(path)
 	}
 
-	_, err = u.Service.UpdateReports()
+	_, err = u.ReportService.UpdateReports(job.ProjectID)
+	if err != nil {
+		return err
+	}
 
+	err = u.UpdateTimeService.SetLastUpdateTime(job.ProjectID, time.Now().Unix())
 	return err
 }
 
-func (u *Updater) UpdateEvery(dur time.Duration) {
+func (u *Updater) handle() {
+	for {
+		job := <-u.JobChannel
+		u.UpdateReview(job)
+	}
+}
+
+func (u *Updater) Run() {
+	u.handle()
+}
+
+func (u *Updater) PushJobEvery(job UpdateJob, dur time.Duration) {
 	go func() {
 		for {
-			err := u.UpdateReview()
+			err := u.UpdateReview(job)
 			if err != nil {
 				u.Logger.Print(err)
 			}
@@ -234,10 +272,24 @@ func (u *Updater) UpdateEvery(dur time.Duration) {
 	}()
 }
 
-func NewUpdater(conf UpdaterConfig, service service.ReportService) *Updater {
+// func (u *Updater) UpdateEvery(dur time.Duration) {
+// 	go func() {
+// 		for {
+// 			err := u.UpdateReview()
+// 			if err != nil {
+// 				u.Logger.Print(err)
+// 			}
+// 			time.Sleep(dur)
+// 		}
+// 	}()
+// }
+
+func NewUpdater(conf UpdaterConfig, reportService service.ReportService, updateTimeService service.UpdateTimeService) *Updater {
 	return &Updater{
-		UpdaterConfig: conf,
-		Service:       service,
-		Logger:        log.Default(),
+		UpdaterConfig:     conf,
+		JobChannel:        make(chan UpdateJob, 1),
+		ReportService:     reportService,
+		UpdateTimeService: updateTimeService,
+		Logger:            log.Default(),
 	}
 }

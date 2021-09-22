@@ -1,20 +1,20 @@
 package service
 
 type UpdateTimeRepository interface {
-	GetLastUpdateTime() (int64, error)
-	SetLastUpdateTime(int64) error
+	GetLastUpdateTime(string) (int64, error)
+	SetLastUpdateTime(string, int64) error
 }
 
 type DefaultUpdateTimeService struct {
 	repo UpdateTimeRepository
 }
 
-func (uts *DefaultUpdateTimeService) GetLastUpdateTime() (int64, error) {
-	return uts.repo.GetLastUpdateTime()
+func (uts *DefaultUpdateTimeService) GetLastUpdateTime(tag string) (int64, error) {
+	return uts.repo.GetLastUpdateTime(tag)
 }
 
-func (uts *DefaultUpdateTimeService) SetLastUpdateTime(time int64) error {
-	return uts.repo.SetLastUpdateTime(time)
+func (uts *DefaultUpdateTimeService) SetLastUpdateTime(tag string, time int64) error {
+	return uts.repo.SetLastUpdateTime(tag, time)
 }
 
 func NewDefaultUpdateTimeService(repo UpdateTimeRepository) *DefaultUpdateTimeService {

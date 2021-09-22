@@ -1,6 +1,7 @@
 package report
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -27,6 +28,7 @@ func (h *ReportHandler) HandleLogin(ctx *gin.Context) {
 	}
 
 	ok, err := h.Service.Login(loginForm.Password)
+	log.Print(loginForm.Password)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.Logger.Print(err)
@@ -50,11 +52,23 @@ func (h *ReportHandler) HandleLogin(ctx *gin.Context) {
 }
 
 func (h *ReportHandler) HandlerIndex(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "index.html", nil)
+	tag := ctx.Param("tag")
+	h.Logger.Print(tag)
+	intDate, err := h.Service.GetLastUpdateTime(tag)
+	if err != nil {
+		h.Logger.Print(err)
+	}
+
+	project := ProjectTemplate{
+		ID:             tag,
+		LastUpdateTime: time.Unix(intDate, 0).Format(time.ANSIC),
+	}
+	ctx.HTML(http.StatusOK, "index.html", project)
 }
 
 func (h *ReportHandler) HandlerData(ctx *gin.Context) {
-	reports, err := h.Service.GetReports()
+	tag := ctx.Param("tag")
+	reports, err := h.Service.GetReports(tag)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.Logger.Print(err)
@@ -87,34 +101,36 @@ func (h *ReportHandler) HandleUpdatePlan(ctx *gin.Context) {
 		return
 	}
 
-	filename := "temp_plan.xlsx"
+	tag := ctx.Param("tag")
+	filename := "temp_plan" + tag + ".xlsx"
 	if err = ctx.SaveUploadedFile(uploadedFile, filename); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		h.Logger.Print(err)
 		return
 	}
 
-	err = SafeCopyFile("plan.xlsx", "temp_plan.xlsx")
+	mainFilename := "plan" + tag + ".xlsx"
+	err = SafeCopyFile(mainFilename, filename)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.Logger.Print(err)
 		return
 	}
 
-	err = os.Remove("temp_plan.xlsx")
+	err = os.Remove(filename)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.Logger.Print(err)
 		return
 	}
 
-	_, err = h.Service.UpdateReports()
+	_, err = h.Service.UpdateReports(tag)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.Logger.Print(err)
 		return
 	}
-	err = h.Service.SetLastUpdateTime(time.Now().Unix())
+	err = h.Service.SetLastUpdateTime(tag, time.Now().Unix())
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.Logger.Print(err)
@@ -130,34 +146,36 @@ func (h *ReportHandler) HandleUpdateReview(ctx *gin.Context) {
 		return
 	}
 
-	filename := "temp_review.xlsx"
+	tag := ctx.Param("tag")
+	filename := "temp_review" + tag + ".xlsx"
 	if err = ctx.SaveUploadedFile(uploadedFile, filename); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		h.Logger.Print(err)
 		return
 	}
 
-	err = SafeCopyFile("review.xlsx", "temp_review.xlsx")
+	mainFilename := "review" + tag + ".xlsx"
+	err = SafeCopyFile(mainFilename, filename)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.Logger.Print(err)
 		return
 	}
 
-	err = os.Remove("temp_review.xlsx")
+	err = os.Remove(filename)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.Logger.Print(err)
 		return
 	}
 
-	_, err = h.Service.UpdateReports()
+	_, err = h.Service.UpdateReports(tag)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.Logger.Print(err)
 		return
 	}
-	err = h.Service.SetLastUpdateTime(time.Now().Unix())
+	err = h.Service.SetLastUpdateTime(tag, time.Now().Unix())
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.Logger.Print(err)
@@ -166,7 +184,8 @@ func (h *ReportHandler) HandleUpdateReview(ctx *gin.Context) {
 }
 
 func (h *ReportHandler) HandlerLastUpdateTime(ctx *gin.Context) {
-	lastUpdateTime, err := h.Service.GetLastUpdateTime()
+	tag := ctx.Param("tag")
+	lastUpdateTime, err := h.Service.GetLastUpdateTime(tag)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		h.Logger.Print(err)
